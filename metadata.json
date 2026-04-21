@@ -1,0 +1,6 @@
+{
+  "name": "Root Runner",
+  "description": "A developer-themed 3D endless runner where you collect CS skills and avoid system crashes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
