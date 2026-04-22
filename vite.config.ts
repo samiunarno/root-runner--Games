@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       hmr: process.env.DISABLE_HMR !== 'true',
-      allowedHosts: ['all'],  // Allow all hosts
+      allowedHosts: ['root-runner-games-fsnd.onrender.com'],  // Add the host here
     },
   };
 });
