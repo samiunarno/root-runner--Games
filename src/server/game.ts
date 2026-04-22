@@ -1,13 +1,17 @@
 import { Server } from 'socket.io';
-import { db } from './db';
 
 interface GameSettings {
-  globalSpeedMultiplier: number;
-  spawnRateMultiplier: number;
-  isPaused: boolean;
+  baseSpeed: number;
+  spawnRate: number;
+  difficultyMultiplier: number;
 }
 
-let currentSettings = db.getSettings();
+let currentSettings: GameSettings = {
+  baseSpeed: 15,
+  spawnRate: 0.8,
+  difficultyMultiplier: 1.1
+};
+
 const activePlayers = new Map<string, any>();
 
 export const setupSocket = (io: Server) => {

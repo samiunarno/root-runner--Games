@@ -1,7 +1,7 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from './auth';
-import { db } from './db';
+import { User } from './models';
 
 const router = express.Router();
 
@@ -23,49 +23,61 @@ export const adminOnly = (req: any, res: any, next: any) => {
   next();
 };
 
-router.get('/me', authenticate, (req: any, res) => {
-  const users = db.getUsers();
-  const user = users.find((u: any) => u.id === req.user.id);
-  if (!user) return res.status(404).json({ error: 'User not found' });
-  
-  const { password, ...safeUser } = user;
-  res.json(safeUser);
+router.get('/me', authenticate, async (req: any, res) => {
+  try {
+    const user = await (User as any).findById(req.user.id).select('-password');
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json(user);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-router.patch('/character', authenticate, (req: any, res) => {
+router.patch('/character', authenticate, async (req: any, res) => {
   const { character } = req.body;
-  const users = db.getUsers();
-  const user = users.find((u: any) => u.id === req.user.id);
-  
-  if (!user) return res.status(404).json({ error: 'User not found' });
-  if (!user.unlockedCharacters.includes(character)) return res.status(403).json({ error: 'Character not unlocked' });
+  try {
+    const user = await (User as any).findById(req.user.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (!user.unlockedCharacters.includes(character)) return res.status(403).json({ error: 'Character not unlocked' });
 
-  user.character = character;
-  db.saveUsers(users);
-  res.json({ success: true, character });
+    user.character = character;
+    await user.save();
+    res.json({ success: true, character });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Admin CRUD
-router.get('/', authenticate, adminOnly, (req, res) => {
-  const users = db.getUsers();
-  res.json(users.map(({ password, ...u }: any) => u));
+router.get('/', authenticate, adminOnly, async (req, res) => {
+  try {
+    const users = await (User as any).find().select('-password');
+    res.json(users);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-router.delete('/:id', authenticate, adminOnly, (req, res) => {
-  const users = db.getUsers();
-  const filtered = users.filter((u: any) => u.id !== req.params.id);
-  db.saveUsers(filtered);
-  res.json({ success: true });
+router.delete('/:id', authenticate, adminOnly, async (req, res) => {
+  try {
+    await (User as any).findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-router.patch('/:id/ban', authenticate, adminOnly, (req, res) => {
-  const users = db.getUsers();
-  const user = users.find((u: any) => u.id === req.params.id);
-  if (!user) return res.status(404).json({ error: 'User not found' });
-  
-  user.isBanned = !user.isBanned;
-  db.saveUsers(users);
-  res.json({ success: true, isBanned: user.isBanned });
+router.patch('/:id/ban', authenticate, adminOnly, async (req, res) => {
+  try {
+    const user = await (User as any).findById(req.params.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    
+    user.isBanned = !user.isBanned;
+    await user.save();
+    res.json({ success: true, isBanned: user.isBanned });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 export default router;

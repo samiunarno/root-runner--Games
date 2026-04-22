@@ -5,11 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build --sourcemap false",
-    "start": "node server.ts",
+    "build": "vite build --sourcemap false && esbuild server.ts --bundle --platform=node --outfile=dist/server.cjs --format=cjs --external:vite --external:express --external:socket.io --external:mongoose --external:bcryptjs --external:jsonwebtoken --external:cors",
+    "start": "NODE_ENV=production node dist/server.cjs",
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
@@ -21,6 +24,7 @@
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
+    "esbuild": "^0.28.0",
     "express": "^4.22.1",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.546.0",

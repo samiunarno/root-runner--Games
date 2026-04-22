@@ -1,5 +1,4 @@
 import express from "express";
-import { createServer as createViteServer } from "vite";
 import { createServer as createHttpServer } from "http";
 import { Server } from "socket.io";
 import path from "path";
@@ -7,16 +6,19 @@ import cors from "cors";
 import authRouter from "./src/server/auth";
 import usersRouter from "./src/server/users";
 import settingsRouter from "./src/server/settings";
+import leaderboardRouter from "./src/server/leaderboard";
 import { setupSocket } from "./src/server/game";
+import { connectDB } from "./src/server/models";
 
 async function startServer() {
+  await connectDB();
   const app = express();
   const httpServer = createHttpServer(app);
   const io = new Server(httpServer, {
     cors: { origin: "*" }
   });
 
-  const PORT = 3000;
+  const PORT = Number(process.env.PORT) || 3000;
 
   app.use(cors());
   app.use(express.json());
@@ -25,6 +27,7 @@ async function startServer() {
   app.use("/api/auth", authRouter);
   app.use("/api/users", usersRouter);
   app.use("/api/settings", settingsRouter);
+  app.use("/api/leaderboard", leaderboardRouter);
 
   app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
@@ -33,15 +36,18 @@ async function startServer() {
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), 'dist');
+    const distPath = path.resolve(process.cwd(), 'dist');
     app.use(express.static(distPath));
-    app.get('*', (req, res) => res.sendFile(path.join(distPath, 'index.html')));
+    app.get('*', (req, res) => {
+      res.sendFile(path.resolve(distPath, 'index.html'));
+    });
   }
 
   httpServer.listen(PORT, "0.0.0.0", () => {
