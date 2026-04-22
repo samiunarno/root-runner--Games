@@ -1,7 +1,10 @@
 import { create } from 'zustand';
 
 interface GameState {
-  status: 'menu' | 'playing' | 'paused' | 'gameover' | 'shop';
+  status: 'menu' | 'playing' | 'paused' | 'gameover' | 'shop' | 'auth' | 'admin';
+  user: any | null;
+  token: string | null;
+  socket: any | null;
   score: number;
   skills: number;
   speed: number;
@@ -14,6 +17,15 @@ interface GameState {
   cameraMode: 'follow' | 'isometric';
   character: 'boy' | 'girl' | 'teen' | 'nerd' | 'bot' | 'glitch' | 'nexus';
   unlockedCharacters: string[];
+  gameSettings: {
+    baseSpeed: number;
+    spawnRate: number;
+    difficultyMultiplier: number;
+  };
+  setAuth: (user: any, token: string) => void;
+  logout: () => void;
+  openAdmin: () => void;
+  setGameSettings: (settings: any) => void;
   startGame: () => void;
   pauseGame: () => void;
   resumeGame: () => void;
@@ -32,27 +44,41 @@ interface GameState {
 }
 
 export const useStore = create<GameState>((set) => ({
-  status: 'menu',
+  status: 'auth',
+  user: null,
+  token: localStorage.getItem('token'),
+  socket: null,
   score: 0,
   skills: 0,
   speed: 15,
   multiplier: 1,
-  powerups: {
-    magnet: 0,
-    multiplier: 0,
-    jetpack: 0,
-  },
+  powerups: { magnet: 0, multiplier: 0, jetpack: 0 },
   cameraMode: 'follow',
   character: 'nerd',
   unlockedCharacters: ['boy', 'nerd'],
-  startGame: () => set({ 
+  gameSettings: {
+    baseSpeed: 15,
+    spawnRate: 0.8,
+    difficultyMultiplier: 1.1
+  },
+  setAuth: (user, token) => {
+    localStorage.setItem('token', token);
+    set({ user, token, status: 'menu', character: user.character, unlockedCharacters: user.unlockedCharacters, skills: user.skills });
+  },
+  logout: () => {
+    localStorage.removeItem('token');
+    set({ user: null, token: null, status: 'auth' });
+  },
+  openAdmin: () => set({ status: 'admin' }),
+  setGameSettings: (settings) => set({ gameSettings: settings }),
+  startGame: () => set((state) => ({ 
     status: 'playing', 
     score: 0, 
     skills: 0, 
-    speed: 15, 
+    speed: state.gameSettings.baseSpeed, 
     multiplier: 1,
     powerups: { magnet: 0, multiplier: 0, jetpack: 0 }
-  }),
+  })),
   pauseGame: () => set({ status: 'paused' }),
   resumeGame: () => set({ status: 'playing' }),
   endGame: () => set({ status: 'gameover' }),
@@ -73,15 +99,15 @@ export const useStore = create<GameState>((set) => ({
       multiplier: nextMultiplier > 0 ? 2 : 1
     };
   }),
-  increaseSpeed: () => set((state) => ({ speed: Math.min(state.speed + 0.1, 40) })),
-  restart: () => set({ 
+  increaseSpeed: () => set((state) => ({ speed: Math.min(state.speed + (0.1 * state.gameSettings.difficultyMultiplier), 40) })),
+  restart: () => set((state) => ({ 
     status: 'playing', 
     score: 0, 
     skills: 0, 
-    speed: 15, 
+    speed: state.gameSettings.baseSpeed, 
     multiplier: 1,
     powerups: { magnet: 0, multiplier: 0, jetpack: 0 }
-  }),
+  })),
   setCharacter: (char) => set({ character: char }),
   unlockCharacter: (char, cost) => set((state) => {
     if (state.skills >= cost && !state.unlockedCharacters.includes(char)) {

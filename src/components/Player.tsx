@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { useStore } from '../store/useStore';
 import { RoundedBox } from '@react-three/drei';
 import { LANE_WIDTH, JUMP_VELOCITY, GRAVITY, RUN_SPEED, IDLE_SPEED } from '../constants';
+import { JetpackFlame } from './Effects';
 
 export default function Player({ position, playerPosRef, groundHeightRef }: { 
   position: [number, number, number], 
@@ -102,7 +103,7 @@ export default function Player({ position, playerPosRef, groundHeightRef }: {
     
     // Jetpack priority
     if (isJetpackActive) {
-        currentGround = 6; // Fly at constant height
+        currentGround = 15; // Fly much higher for sky view
     }
 
     if (isJumping || isJetpackActive) {
@@ -241,6 +242,7 @@ export default function Player({ position, playerPosRef, groundHeightRef }: {
                <meshBasicMaterial color="#00ffff" />
              </mesh>
              <pointLight intensity={1} color="#00ffff" distance={2} />
+             <JetpackFlame active={isJetpackActive} />
           </group>
           <group position={[0.3, -0.4, 0]}>
              <mesh>
@@ -248,6 +250,7 @@ export default function Player({ position, playerPosRef, groundHeightRef }: {
                <meshBasicMaterial color="#00ffff" />
              </mesh>
              <pointLight intensity={1} color="#00ffff" distance={2} />
+             <JetpackFlame active={isJetpackActive} />
           </group>
         </group>
       )}

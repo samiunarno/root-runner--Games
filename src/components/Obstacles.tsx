@@ -1,13 +1,25 @@
 import { useFrame } from '@react-three/fiber';
 import { useRef, useState, useMemo, useEffect } from 'react';
+import { io } from 'socket.io-client';
 import * as THREE from 'three';
 import { useStore } from '../store/useStore';
 import { Text } from '@react-three/drei';
 import { LANE_WIDTH, SPAWN_Z } from '../constants';
+import { triggerBurst } from './Effects';
 
 const OBSTACLE_TYPES = ['barrier', 'tall', 'train', 'cone', 'turret', 'slider', 'ramp'];
 const POWERUP_TYPES = ['jetpack', 'sneakers', 'magnet', 'multiplier'];
-const SKILLS = ['React', 'TS', 'Python', 'Go', 'AWS', 'Docker', 'AI', 'Machine Learning', 'Data Structures', 'Algorithms', 'Cybersecurity', 'Cloud Computing'];
+const SKILLS = [
+  'JavaScript', 'TypeScript', 'React', 'Node.js', 'Python', 'C++', 'Java', 'Go', 'Rust', 'Swift', 'Kotlin', 'PHP', 'Ruby',
+  'Data Structures', 'Algorithms', 'Operating Systems', 'Computer Networks', 'Database Management', 'SQL', 'NoSQL', 'MongoDB',
+  'Machine Learning', 'Artificial Intelligence', 'Deep Learning', 'Neural Networks', 'Natural Language Processing',
+  'Cloud Computing', 'AWS', 'Azure', 'Google Cloud', 'Docker', 'Kubernetes', 'CI/CD', 'GitHub Actions',
+  'Cybersecurity', 'Ethical Hacking', 'Cryptography', 'Blockchain', 'Web3', 'Smart Contracts',
+  'Mobile Development', 'Flutter', 'React Native', 'Android SDK', 'iOS Development',
+  'UI/UX Design', 'Figma', 'System Design', 'Microservices', 'Distributed Systems',
+  'Compilers', 'Discrete Math', 'Calculus', 'Linear Algebra', 'Statistics',
+  'Embedded Systems', 'IoT', 'Quantum Computing', 'Game Development', 'Unity', 'Unreal Engine'
+];
 
 interface Item {
   id: number;
@@ -35,9 +47,9 @@ export default function Spawner({ playerPosRef, groundHeightRef }: {
   const statusRef = useRef<'menu' | 'playing' | 'paused' | 'gameover' | 'shop'>('menu');
   
   // Select values but don't cause re-renders for every frame if possible
-  // We actually need status for the conditional render, but speed can be a ref.
   const status = useStore(state => state.status);
   const speed = useStore(state => state.speed);
+  const gameSettings = useStore(state => state.gameSettings);
   const addScore = useStore(state => state.addScore);
   const addSkills = useStore(state => state.addSkills);
   const endGame = useStore(state => state.endGame);
@@ -45,8 +57,11 @@ export default function Spawner({ playerPosRef, groundHeightRef }: {
   const magnetActive = useStore(state => state.powerups.magnet > 0);
   const isJetpackActive = useStore(state => state.powerups.jetpack > 0);
 
-  useEffect(() => { speedRef.current = speed; }, [speed]);
-  useEffect(() => { statusRef.current = status; }, [status]);
+  useEffect(() => { 
+    speedRef.current = speed; 
+  }, [speed]);
+
+  useEffect(() => { statusRef.current = status as any; }, [status]);
 
   const lastSpawnZ = useRef(0);
   const idCounter = useRef(0);
@@ -60,7 +75,7 @@ export default function Spawner({ playerPosRef, groundHeightRef }: {
     const curSpeed = speedRef.current;
 
     if (statusRef.current !== 'playing') {
-       if (items.length > 0 || popups.length > 0) {
+       if (items.length > 0) {
          setItems([]);
          setPopups([]);
          itemZMap.current.clear();
@@ -71,7 +86,11 @@ export default function Spawner({ playerPosRef, groundHeightRef }: {
     
     // 1. Spawning
     lastSpawnZ.current += curSpeed * delta;
-    if (lastSpawnZ.current > 15) {
+    
+    // Obstacle spawn distance depends on speed and global spawnRate
+    const spawnThreshold = 18 / (gameSettings.spawnRate || 1.0);
+    
+    if (lastSpawnZ.current > spawnThreshold) {
       lastSpawnZ.current = 0;
       const newItems: Item[] = [];
       const numLanes = Math.random() > 0.8 ? 2 : 1;
@@ -176,6 +195,7 @@ export default function Spawner({ playerPosRef, groundHeightRef }: {
                     scoreVal += 20;
                     skillCount += 1;
                     popupsBatch.push({ id: popupIdCounter.current++, text: item.skillName || 'Skill++', x: itemX, z, opacity: 1 });
+                    triggerBurst({ x: itemX, y: py, z: z, count: 15, color: '#00ff00', speed: 10 });
                 }
             } else if (item.type === 'powerup') {
                 if (dx < 1.1 && dz < 1.1 && py < (newGroundHeight + 2.2)) {
@@ -184,6 +204,7 @@ export default function Spawner({ playerPosRef, groundHeightRef }: {
                    const sType = item.subType as any;
                    if (['magnet', 'multiplier', 'jetpack'].includes(sType)) activatePowerup(sType, 10);
                    popupsBatch.push({ id: popupIdCounter.current++, text: sType.toUpperCase(), x: itemX, z, opacity: 1 });
+                   triggerBurst({ x: itemX, y: py, z: z, count: 30, color: '#ffff00', speed: 15, size: 0.2 });
                 }
             } else if (item.type === 'obstacle' || item.type === 'projectile') {
                 let hit = false;
@@ -199,7 +220,10 @@ export default function Spawner({ playerPosRef, groundHeightRef }: {
                 else if (item.subType === 'turret') { if (dx < 0.7 && dz < 1.0 && py < 3.0) hit = true; }
                 else if (item.subType === 'slider') { if (dx < 0.6 && dz < 0.5 && py < 1.3) hit = true; }
                 
-                if (hit) crash = true;
+                if (hit) {
+                    crash = true;
+                    triggerBurst({ x: px, y: py, z: pz, count: 50, color: '#ff0000', speed: 20, size: 0.3 });
+                }
             }
         }
 
