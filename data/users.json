@@ -1,0 +1,18 @@
+[
+  {
+    "id": "1776866514449",
+    "username": "samiun",
+    "email": "samiunarnouk@gmail.com",
+    "password": "$2b$10$jEQOjnM0wx1ug0KOe.vmqe5w4KudcglGJ19sPfeJtBBU3LecPcSnG",
+    "role": "admin",
+    "character": "nerd",
+    "unlockedCharacters": [
+      "boy",
+      "nerd"
+    ],
+    "skills": 0,
+    "highScore": 0,
+    "isBanned": false,
+    "createdAt": "2026-04-22T14:01:54.449Z"
+  }
+]
