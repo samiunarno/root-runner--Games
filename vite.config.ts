@@ -1,16 +1,26 @@
-import { defineConfig } from 'vite';
+import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+import { defineConfig, loadEnv } from 'vite';
 
-export default defineConfig({
-  server: {
-    // Add allowed hosts here
-    allowedHosts: [
-      'goodly-rea-furthermore.ngrok-free.dev',  // Your Ngrok URL
-      // Add any other domains you might need to allow here
-    ],
-    // Optional: You can add other server settings if needed
-    host: '0.0.0.0', // This makes the server accessible on your local network (useful for Ngrok)
-    port: 3000, // The port your server will run on (optional, adjust as needed)
-    strictPort: true, // If true, Vite will fail to start if the port is already in use
-  },
-  // Other Vite configuration settings (if needed)
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, '.', '');
+  return {
+    plugins: [react(), tailwindcss()],
+    define: {
+      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+    },
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, '.'),
+      },
+    },
+    server: {
+      hmr: process.env.DISABLE_HMR !== 'true',
+      allowedHosts: [
+        'goodly-rea-furthermore.ngrok-free.dev',  // Allow your specific Ngrok URL
+        'all'  // You can still use this if you want to allow all hosts
+      ], // Allow all hosts
+    },
+  };
 });

@@ -14,5 +14,37 @@
     "highScore": 0,
     "isBanned": false,
     "createdAt": "2026-04-22T14:01:54.449Z"
+  },
+  {
+    "id": "1776869544314",
+    "username": "samiunarno",
+    "email": "attendantarno@gmail.com",
+    "password": "$2b$10$7a.QGBJdskx8fOHLwoNNEu8UfJNAb56U6AhvUt5vTEHW6sT3tgZya",
+    "role": "user",
+    "character": "boy",
+    "unlockedCharacters": [
+      "boy",
+      "nerd"
+    ],
+    "skills": 0,
+    "highScore": 0,
+    "isBanned": false,
+    "createdAt": "2026-04-22T14:52:24.314Z"
+  },
+  {
+    "id": "1776870406303",
+    "username": "gf",
+    "email": "hhff@gmail.com",
+    "password": "$2b$10$Ho3vtjeSI8MJMxzJkJOVueo7PFqPCq7D8uHZsPnVbLhVwxFCs2D.u",
+    "role": "user",
+    "character": "boy",
+    "unlockedCharacters": [
+      "boy",
+      "nerd"
+    ],
+    "skills": 0,
+    "highScore": 0,
+    "isBanned": false,
+    "createdAt": "2026-04-22T15:06:46.303Z"
   }
 ]
